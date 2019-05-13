@@ -1,0 +1,75 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage,enumitem,amsmath,amssymb,graphicx, listings, array, bbm}
+
+\begin{document}
+
+\begin{center}
+{\Large CS246: Mining Massive Data Sets Problem Set 1}
+
+\begin{tabular}{rl}     
+Name: & Dat Nguyen \\
+Date: & 05/09/2019
+\end{tabular}
+\end{center}
+ 
+ By turning in this assignment, I agree by the Stanford honor code and declare that all of this is my own work.
+
+\section*{1 Spark (25 pts)}
+\begin{enumerate}
+	\addtocounter{enumi}{1}
+	\item My pipeline:
+		\begin{itemize}
+			\item For each person 'b' in the friend list of person 'a', get a list of friends of that person 'b'. Therefore if a person 'c' in that list then 'c' will have mutual friend 'b' with 'a'.
+			\item Count the number of people having mutual friend with 'a' by grouping and reducing with key 'a'.
+			\item Process the result (sort, output at most 10 people, output empty list if a has no person having mutual friend) and output to file.
+		\end{itemize}
+	\item Recommendation for:
+		\begin{itemize}
+			\item 924: 439,2409,6995,11860,15416,43748,45881
+			\item 8941: 8943,8944,8940 
+			\item 8942: 8939,8940,8943,8944 
+			\item 9019: 9022,317,9023
+			\item 9020: 9021,9016,9017,9022,317,9023
+			\item 9021: 9020,9016,9017,9022,317,9023
+			\item 9022: 9019,9020,9021,317,9016,9017,9023
+			\item 9990: 13134,13478,13877,34299,34485,34642,37941
+			\item 9992: 9987,9989,35667,9991
+			\item 9993: 9991,13134,13478,13877,34299,34485,34642,37941
+		\end{itemize}
+\end{enumerate}
+
+\section*{2 Association Rules (30 pts)}
+\begin{enumerate}
+	\item This is a drawback because if support of B is high (B appears in a lot of baskets) then there are many item A having the number of times they appear together with B and the number of times they appear by themself roughly equal. So for many items the confidence will be high. Since lift and conviction take S(B) into account so we can see the difference between Pr(B) alone and when A is given.
+	\item 
+	\begin{itemize}
+		\item Confidence is not symmetric because from
+		\begin{align*}
+			\text{conf}(A \rightarrow B) &= \frac{S(A,B)}{S(A)} \\
+			\text{conf}(B \rightarrow A) &= \frac{S(A,B)}{S(B)} \\
+		\end{align*}
+		If we choose $S(A) = 0.3, S(B) = 0.2, S(A,B) = 0.1$ then $\text{conf}(A \rightarrow B) = \frac{1}{3}$ and $\text{conf}(B \rightarrow A) = 0.5$
+		\item Lift is symmetric because
+		\begin{align*}
+			\text{lift}(A \rightarrow B) &= \frac{\text{conf}(A \rightarrow B)}{S(B)} \\
+			&=\frac{S(A, B)}{S(A)S(B)} \\
+			&= \frac{\text{conf}(B \rightarrow A)}{S(A)} \\
+			&= \text{lift}(B \rightarrow A)
+		\end{align*}
+		\item Conviction is not symmetric because from
+		\begin{align*}
+			\text{conv}(A \rightarrow B) &= \frac{1 - S(B)}{1 - \text{conf}(A \rightarrow B)} \\
+			&= \frac{S(A) - S(A)S(B)}{S(A) - S(A, B)}
+		\end{align*}
+		\begin{align*}
+			\text{conv}(B \rightarrow A) &= \frac{1 - S(A)}{1 - \text{conf}(B \rightarrow A)} \\
+			&= \frac{S(B) - S(B)S(A)}{S(B) - S(A, B)}
+		\end{align*}
+		If we choose $S(A)=0.4, S(B)=0.3, S(A, B) = 0.1$ then $\text{conv}(A \rightarrow B) = \frac{14}{15}$ and $\text{conv}(B \rightarrow A) = 0.9$
+		\item
+		Confidence $\text{conf}(A \rightarrow B)$ is desirable because it reaches maximum value of 1 when $S(A, B) = S(A)$ (occurence of A implies occurence of B). \\
+		Lift is not desirable because when the rule is perfect (which implies $\text{conf}(A \rightarrow B)) = 1$, the value of lift can vary with the value of $S(B)$. \\
+		Conviction is also not desiable because when $\text{conf}(A \rightarrow B) = 1$ the denominator is 0 so the value of conviction is not defined.
+	\end{itemize}
+\end{enumerate}
+\end{document}
