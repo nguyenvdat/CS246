@@ -6,12 +6,14 @@ import time
 import pdb
 import unittest
 from PIL import Image
+import matplotlib.pyplot as plt
+import os
 
 # Finds the L1 distance between two vectors
 # u and v are 1-dimensional np.array objects
 # TODO: Implement this
 def l1(u, v):
-    raise NotImplementedError
+    return np.sum(np.abs(u - v))
 
 # Loads the data into a np array, where each row corresponds to
 # an image patch -- this step is sort of slow.
@@ -85,22 +87,97 @@ def lsh_search(A, hashed_A, functions, query_index, num_neighbors = 10):
 
 # Plots images at the specified rows and saves them each to files.
 def plot(A, row_nums, base_filename):
-    for row_num in row_nums:
+    plt.rcParams.update({'font.size': 7})
+    fig,ax = plt.subplots(3,5, figsize=(5, 4))
+    for i, row_num in enumerate(row_nums):
         patch = np.reshape(A[row_num, :], [20, 20])
         im = Image.fromarray(patch)
         if im.mode != 'RGB':
             im = im.convert('RGB')
-        im.save(base_filename + "-" + str(row_num) + ".png")
+        # im.save(base_filename + "-" + str(row_num) + ".png")
+        if i == 0:
+            ax[0][0].imshow(im)
+            ax[0][0].set_title("Original row: " + str(row_num))
+        else:
+            ax[(i - 1)%2 + 1][(i - 1)//2].imshow(im)
+            ax[(i - 1)%2 + 1][(i - 1)//2].set_title('Row: ' + str(row_num))
+    for i in range(3):
+        for j in range(5):
+            ax[i][j].axis('off')
+    fig.savefig('../tex/' + base_filename + ".png")
 
 # Finds the nearest neighbors to a given vector, using linear search.
 def linear_search(A, query_index, num_neighbors):
-    raise NotImplementedError #TODO
+    #TODO
+    distances = np.sum(np.abs(A - A[query_index]), axis=1)
+    distances[query_index] = 1e6
+    return list(np.argpartition(-distances, -num_neighbors)[-num_neighbors:])
 
 # TODO: Write a function that computes the error measure
+def compute_error(A, query_indexes, linear_neighbors, lsh_neighbors):
+    def error_one_query(query_index, neighbors):
+        distance = sum(map(lambda i: l1(A[query_index], A[i]), neighbors))
+        return distance
+    distance_ratios = map(lambda i: error_one_query(query_indexes[i], lsh_neighbors[i])/error_one_query(query_indexes[i], linear_neighbors[i]), range(len(lsh_neighbors)))
+    return sum(distance_ratios)/len(lsh_neighbors)
+
 
 # TODO: Solve Problem 4
-def problem4():
-    raise NotImplementedError
+def problem4(A):
+    # A = load_data('q4/data/patches.csv')
+    problem4_1(A)
+
+def problem4_1(A):
+    num_neighbors = 3
+    query_indexes = [100 * j for j in range(1, 11)]
+    start = time.time()
+    linear_neighbors = list(map(lambda query_index: linear_search(A, query_index, num_neighbors), query_indexes))
+    end = time.time()
+    print('Time linear search: ' + str(end - start))
+
+    L = 10
+    k = 24
+    functions, hashed_A = lsh_setup(A, k, L)
+    start = time.time()
+    lsh_neighbors = list(map(lambda query_index: lsh_search(A, hashed_A, functions, query_index, num_neighbors), query_indexes))
+    end = time.time()
+    print('Time lsh search: ' + str(end - start))
+
+def problem4_2(A):
+    num_neighbors = 3
+    query_indexes = [100 * j for j in range(1, 11)]
+    start = time.time()
+    linear_neighbors = list(map(lambda query_index: linear_search(A, query_index, num_neighbors), query_indexes))
+    end = time.time()
+    print('Time linear search: ' + str(end - start))
+    Ls = np.arange(10, 21, 2)
+    k = 24
+    errors = []
+    for L in Ls:
+        functions, hashed_A = lsh_setup(A, k, L)
+        lsh_neighbors = list(map(lambda query_index: lsh_search(A, hashed_A, functions, query_index, num_neighbors), query_indexes))
+        error = compute_error(A, query_indexes, linear_neighbors, lsh_neighbors)
+        errors.append(error)
+    plt.plot(Ls, errors, 'ro')
+    plt.axis([0, 6, 5, 25])
+    plt.ylabel('Error')
+    plt.xlabel('L')
+    plt.show()
+
+    L = 10
+    ks = [16, 18, 20, 22, 24]
+    errors = []
+    for k in ks:
+        print(k)
+        functions, hashed_A = lsh_setup(A, k, L)
+        lsh_neighbors = list(map(lambda query_index: lsh_search(A, hashed_A, functions, query_index, num_neighbors), query_indexes))
+        error = compute_error(A, query_indexes, linear_neighbors, lsh_neighbors)
+        errors.append(error)
+    plt.plot(ks, errors, 'ro')
+    plt.axis([15, 25, 1, 1.05])
+    plt.ylabel('Error')
+    plt.xlabel('k')
+    plt.show()
 
 #### TESTS #####
 
@@ -121,10 +198,28 @@ class TestLSH(unittest.TestCase):
         self.assertTrue(np.array_equal(hash_vector(functions, A[0, :]), np.array([6, 14])))
         self.assertTrue(np.array_equal(hash_data(functions, A), np.array([[6, 14], [15, 77]])))
 
+    def test_error(self):
+        A = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 0], [1, 2, 0]])
+        query_indexes = [0, 1]
+        linear_neighbors = [[2, 3], [0, 3]]
+        lsh_neighbors = [[1, 2], [0, 2]]
+        self.assertEqual(error(A, query_indexes, linear_neighbors, lsh_neighbors), 59/42)
+
+
     ### TODO: Write your tests here (they won't be graded, 
     ### but you may find them helpful)
 
 
 if __name__ == '__main__':
 #    unittest.main() ### TODO: Uncomment this to run tests
-    problem4()
+    # test = TestLSH()
+    # test.test_l1()
+    # test.test_error()
+    # plt.plot([1,2,3,4], [1,4,9,16], 'ro')
+    # plt.axis([0, 6, 0, 20])
+    # plt.ylabel('Error')
+    # plt.xlabel('L')
+    # plt.show()
+    A = load_data('q4/data/patches.csv')
+    plot(A, 200, 'test')
+    # problem4()
