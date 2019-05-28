@@ -39,7 +39,7 @@ Date: & 05/09/2019
 \end{enumerate}
 
 \section*{2 Association Rules (30 pts)}
-\begin{enumerate}
+\begin{enumerate}[label=(\alph*)]
 	\item This is a drawback because if support of B is high (B appears in a lot of baskets) then there are many item A having the number of times they appear together with B and the number of times they appear by themself roughly equal. So for many items the confidence will be high. Since lift and conviction take S(B) into account so we can see the difference between Pr(B) alone and when A is given.
 	\item 
 	\begin{itemize}
@@ -66,10 +66,139 @@ Date: & 05/09/2019
 			&= \frac{S(B) - S(B)S(A)}{S(B) - S(A, B)}
 		\end{align*}
 		If we choose $S(A)=0.4, S(B)=0.3, S(A, B) = 0.1$ then $\text{conv}(A \rightarrow B) = \frac{14}{15}$ and $\text{conv}(B \rightarrow A) = 0.9$
+	\end{itemize}
+	\item
+	Confidence $\text{conf}(A \rightarrow B)$ is desirable because it reaches maximum value of 1 when $S(A, B) = S(A)$ (occurence of A implies occurence of B). \\
+	Lift is not desirable because when the rule is perfect (which implies $\text{conf}(A \rightarrow B)) = 1$, the value of lift can vary with the value of $S(B)$. \\
+	Conviction is also not desiable because when $\text{conf}(A \rightarrow B) = 1$ the denominator is 0 so the value of conviction is not defined.
+	\item
+	The rules and confidence scores are
+	\begin{itemize}
+		\item 'DAI93865' $\rightarrow$ 'FRO40251': 1.0
+		\item 'GRO85051' $\rightarrow$ 'FRO40251': 0.999
+		\item 'GRO38636' $\rightarrow$ 'FRO40251': 0.991
+		\item 'ELE12951' $\rightarrow$ 'FRO40251': 0.991
+		\item 'DAI88079' $\rightarrow$ 'FRO40251': 0.987
+	\end{itemize}
+	\item
+	The rules and confidence scores are
+	\begin{itemize}
+		\item ('DAI23334', 'ELE92920') $\rightarrow$ 'DAI62779': 1.0
+		\item ('DAI31081', 'GRO85051') $\rightarrow$ 'FRO40251': 1.0
+		\item ('DAI55911', 'GRO85051') $\rightarrow$ 'FRO40251': 1.0
+		\item ('DAI62779', 'DAI88079') $\rightarrow$ 'FRO40251': 1.0
+		\item ('DAI75645', 'GRO85051') $\rightarrow$ 'FRO40251': 1.0
+	\end{itemize}
+\end{enumerate}
+
+\section*{3 Locality-Sensitive Hashing (15 pts)}
+\begin{enumerate}[label=(\alph*)]
+	\item Suppose we have randomly chosen k rows, then the probability that none of the rows having 1 is equal to the probability that all of the 1's rows are in the remaining rows. Considering the first 1's row, the probability that it is the remaining rows is
+	\begin{align*}
+		\frac{n - k}{n}
+	\end{align*}
+	The probability that the second 1's row is in the remaining rows is
+	\begin{align*}
+		\frac{n - k - 1}{n - 1} \leq \frac{n - k}{n}
+	\end{align*}
+	Therefore the probability that all of the 1's rows are in the remaining rows is at most
+	\begin{align*}
+		\Big(\frac{n - k}{n}\Big)^m \quad \text{(q.e.d)}
+	\end{align*}
+
+	\item We want to find smallest k such that
+	\begin{align*}
+		\Big(\frac{n - k}{n}\Big)^m &\leq e^{-10} \\
+		\Big(1 -\frac{k}{n}\Big)^{\frac{n}{k}\frac{km}{n}} &\leq e^{-10} \\
+		e^{-\frac{km}{n}} &\leq e^{-10} \quad (\text{Because } n \gg k) \\ 
+		k &\geq \frac{10n}{m}
+	\end{align*}
+	Therefore we choose k to be $\frac{10n}{m}$
+
+	\item We choose
+	S1 = $
+	\begin{bmatrix}
+		1 \\
+		0 \\
+		0 \\
+		0 \\
+		1
+	\end{bmatrix}
+	$ 
+	and S2 = $
+	\begin{bmatrix}
+		0 \\
+		0 \\
+		0 \\
+		0 \\
+		1
+	\end{bmatrix}
+	$ \\
+	The Jaccard similarity of S1 and S2 is 0.5 \\
+	The probability that a random cyclic permutation yields the same minhash value for both S1 and S2 is $\frac{4}{5} = 0.8$
+\end{enumerate}
+
+\section*{4 LSH for Approximate Near Neighbor Search (30 pts)}
+\begin{enumerate}[label=(\alph*)]
+	\item
+	We have
+	\begin{align*}
+		\text{Pr}\Big[\sum_{j=1}^L|T \cap W_j| \geq 3L\Big] &\leq \frac{\mathbb{E}\Big[\sum_{j=1}^L|T \cap W_j|\Big]}{3L} \quad \text{(By Markov's inequality)}\\
+		&= \frac{\sum_{j=1}^L\mathbb{E}\Big[|T \cap W_j|\Big]}{3L} \\
+		&= \frac{\sum_{j=1}^L\mathbb{E}\Big[\sum_{t \in T}\mathbbm{1}[t \in W_j]\Big]}{3L} \\
+		&= \frac{\sum_{j=1}^L\sum_{t \in T}\mathbb{E}\Big[\mathbbm{1}[t \in W_j]\Big]}{3L} \\
+		&= \frac{\sum_{j=1}^L\sum_{t \in T}\text{Pr}\Big[t \in W_j\Big]}{3L} \\
+		&\leq \frac{\sum_{j=1}^L n p_2^{\text{log}_{1/p_2}(n)}}{3L} \\ 
+		&= \frac{\sum_{j=1}^L 1}{3L} \\
+		&= \frac{1}{3} \qquad \qquad (1)\quad \text{(q.e.d)}
+	\end{align*}
+
+	\item
+	We have
+	\begin{align*}
+		\text{Pr}\Big[\forall \ 1 \leq j \leq L, g_j(x^*) \neq g_j(z)\Big] &= \Big(\text{Pr}[g_1(x^*) \neq g_j(z)]\Big)^L \\
+		&= \Big(1 - \text{Pr}[g_1(x^*) = g_j(z)]\Big)^L \\
+		&\leq \Big(1 - p_1^{-\text{log}_{p_2}(n)}\Big)^{n^{\frac{\text{log}(p_1)}{\text{log}(p_2)}}} \\
+		&< \Big(\frac{1}{e}\Big)^{p_1^{-\text{log}_{p_2}(n)}n^{\frac{\text{log}(p_1)}{\text{log}(p_2)}}} \quad (2)\ \text{(Using} \ (1 - \frac{1}{x})^x \approx \frac{1}{e} \text{ for large x)}
+	\end{align*}
+	We calculate the power of (2)
+	\begin{align*}
+		{p_1^{-\text{log}_{p_2}(n)}n^{\frac{\text{log}(p_1)}{\text{log}(p_2)}}} &= n^{-\text{log}_n(p_1)\text{log}_{p_2}(n)}n^{\frac{\text{log}(p_1)}{\text{log}(p_2)}} \\
+		&= n^{-\text{log}_{p_2}(p_1)}n^{\frac{\text{log}(p_1)}{\text{log}(p_2)}} \\
+		&= n^{-\frac{\text{log}(p_1)}{\text{log}(p_2)} + \frac{\text{log}(p_1)}{\text{log}(p_2)}} \\
+		&= 1
+	\end{align*}
+	Therefore plugging in (2) we arrive at
+	\begin{align*}
+		\text{Pr}\Big[\forall \ 1 \leq j \leq L, g_j(x^*) \neq g_j(z)\Big] < \frac{1}{e} \quad \text{(q.e.d)}
+	\end{align*}
+
+	\item
+	Let A be the event that all of the points in 3L points we choose belonging to T. Because event A implies event $\sum_{j=1}^L|T \cap W_j| \geq 3L$, we have 
+	\begin{align*}
+		\text{Pr(A)} \leq \text{Pr}(\sum_{j=1}^L|T \cap W_j| \geq 3L) \leq \frac{1}{3}
+	\end{align*}
+	Therefore
+	\begin{align*}
+		1 - \text{Pr(A)} &\geq 1 - \frac{1}{3} \\
+		1 - \text{Pr(A)} &\geq \frac{2}{3}
+	\end{align*}
+	So the probability of the event that the reported point is an actual $(c, \lambda)$-ANN is greater than some fixed constant (let the constant be $\frac{1.99}{3}$).
+
+	\item 
+	\begin{itemize}
+		\item Average search time for LSH is 0.204s and for linear search is 0.517s
+		\item Error value as function of L \\
+		\includegraphics{L_error.png} \\
+		We can see the trend for larger L the error become smaller because we have more candidates for the best neighbors. \\
+		Error value as function of k \\
+		\includegraphics{k_error.png} \\
+		The general trend is that as k increases so does the error, because for larger k the candidates set shrinks.
 		\item
-		Confidence $\text{conf}(A \rightarrow B)$ is desirable because it reaches maximum value of 1 when $S(A, B) = S(A)$ (occurence of A implies occurence of B). \\
-		Lift is not desirable because when the rule is perfect (which implies $\text{conf}(A \rightarrow B)) = 1$, the value of lift can vary with the value of $S(B)$. \\
-		Conviction is also not desiable because when $\text{conf}(A \rightarrow B) = 1$ the denominator is 0 so the value of conviction is not defined.
+		The top plot and bottom plot show 10 nearest neighbors found by linear search and lsh search respectively. \\
+		\includegraphics{linear.png} \\ 
+		\includegraphics{lsh.png} \\
+		From 2 plots we can see that 9/10 neighbors found by lsh search match the ones found by linear search, and the remaining one (row 7551) reasonably resembles the original row.
 	\end{itemize}
 \end{enumerate}
 \end{document}
